@@ -1,0 +1,88 @@
+{
+    "info": {
+        "_postman_id": "a71123b8-2c30-4ec2-8b5e-8cab4f349e29",
+        "name": "Task Manager Gateway",
+        "description": "Public REST API for the Task Manager application. The gateway delegates task operations to the private Go service.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8081"
+        },
+        {
+            "key": "taskId",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Get application info",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/info"
+            }
+        },
+        {
+            "name": "List tasks",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/tasks"
+            }
+        },
+        {
+            "name": "Create task",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"title\": \"Buy milk\",\n    \"description\": \"Go to the supermarket\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": "{{baseUrl}}/api/tasks"
+            }
+        },
+        {
+            "name": "Change task completion status",
+            "request": {
+                "method": "PATCH",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"completed\": true\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": "{{baseUrl}}/api/tasks/{{taskId}}/complete"
+            }
+        },
+        {
+            "name": "Delete task",
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/tasks/{{taskId}}"
+            }
+        }
+    ]
+}

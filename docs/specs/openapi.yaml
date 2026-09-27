@@ -1,0 +1,310 @@
+openapi: 3.0.3
+info:
+    title: Task Manager Gateway
+    description: |
+        Public API of the task manager. It is the only entry point for the web
+        client and it orchestrates the Go task service, which owns the business
+        rules and the persistence.
+
+        Errors raised by the task service are forwarded with their original code and
+        status, so a client can rely on a single stable set of codes. Failures of the
+        gateway itself use the `gateway:` prefix.
+    version: 1.0.0
+    contact: {}
+
+servers:
+    - url: http://localhost:8081
+      description: Local environment
+
+security: []
+
+tags:
+    - name: info
+      description: Application metadata
+    - name: tasks
+      description: Task management
+
+paths:
+    /api/info:
+        get:
+            tags: [info]
+            summary: Application information
+            description: Answers without reaching the task service, so it stays available while the service is down.
+            operationId: getInfo
+            responses:
+                '200':
+                    description: Application information
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Info'
+                            example:
+                                application: Task Manager Gateway
+                                version: 1.0.0
+
+    /api/tasks:
+        get:
+            tags: [tasks]
+            summary: List tasks
+            description: |
+                Returns every task ordered by creation date, newest first.
+
+                The list is not paginated on purpose: the web client renders it with a
+                virtual scroll, so it needs the whole collection.
+            operationId: listTasks
+            responses:
+                '200':
+                    description: Task collection
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TaskListResponse'
+                '502':
+                    $ref: '#/components/responses/BadGateway'
+                '503':
+                    $ref: '#/components/responses/ServiceUnavailable'
+                '504':
+                    $ref: '#/components/responses/GatewayTimeout'
+
+        post:
+            tags: [tasks]
+            summary: Create a task
+            description: |
+                Validates the payload shape and delegates to the task service, which
+                applies the business rules and assigns the identifier and timestamps.
+            operationId: createTask
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/TaskPayload'
+                        example:
+                            title: Buy milk
+                            description: Go to the supermarket
+            responses:
+                '201':
+                    description: Task created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TaskResponse'
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '502':
+                    $ref: '#/components/responses/BadGateway'
+                '503':
+                    $ref: '#/components/responses/ServiceUnavailable'
+                '504':
+                    $ref: '#/components/responses/GatewayTimeout'
+
+    /api/tasks/{id}:
+        parameters:
+            - name: id
+              in: path
+              required: true
+              description: Task identifier
+              schema:
+                  type: string
+              example: 2c8d915b-6398-41e1-8896-396af606623a
+
+        delete:
+            tags: [tasks]
+            summary: Delete a task
+            operationId: deleteTask
+            responses:
+                '204':
+                    description: Task deleted; no content
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '503':
+                    $ref: '#/components/responses/ServiceUnavailable'
+
+    /api/tasks/{id}/complete:
+        parameters:
+            - name: id
+              in: path
+              required: true
+              description: Task identifier
+              schema:
+                  type: string
+              example: 2c8d915b-6398-41e1-8896-396af606623a
+
+        patch:
+            tags: [tasks]
+            summary: Change the completion status of a task
+            operationId: completeTask
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CompletePayload'
+                        example:
+                            completed: true
+            responses:
+                '200':
+                    description: Task status updated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TaskResponse'
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '503':
+                    $ref: '#/components/responses/ServiceUnavailable'
+
+components:
+    schemas:
+        Info:
+            type: object
+            required: [application, version]
+            properties:
+                application:
+                    type: string
+                    example: Task Manager Gateway
+                version:
+                    type: string
+                    example: 1.0.0
+
+        Task:
+            type: object
+            required: [id, title, description, completed, createdAt, updatedAt]
+            properties:
+                id:
+                    type: string
+                    example: 2c8d915b-6398-41e1-8896-396af606623a
+                title:
+                    type: string
+                    example: Buy milk
+                description:
+                    type: string
+                    example: Go to the supermarket
+                completed:
+                    type: boolean
+                    example: false
+                createdAt:
+                    type: string
+                    format: date-time
+                    example: '2026-09-27T10:05:00Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    example: '2026-09-27T10:05:00Z'
+
+        TaskPayload:
+            type: object
+            required: [title]
+            properties:
+                title:
+                    type: string
+                    minLength: 3
+                    maxLength: 120
+                    example: Buy milk
+                description:
+                    type: string
+                    maxLength: 500
+                    example: Go to the supermarket
+
+        CompletePayload:
+            type: object
+            required: [completed]
+            properties:
+                completed:
+                    type: boolean
+                    example: true
+
+        TaskResponse:
+            type: object
+            required: [data]
+            properties:
+                data:
+                    $ref: '#/components/schemas/Task'
+
+        TaskListResponse:
+            type: object
+            required: [data, total]
+            properties:
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Task'
+                total:
+                    type: integer
+                    example: 25
+
+        Error:
+            type: object
+            required: [code, message]
+            properties:
+                code:
+                    type: string
+                    description: |
+                        Stable internal code. Codes prefixed with `task:` come from the task
+                        service and are forwarded untouched; codes prefixed with `gateway:`
+                        or `common:` are raised by the gateway.
+                    example: task:shared:not-found
+                message:
+                    type: string
+                    example: task not found
+
+    responses:
+        BadRequest:
+            description: Invalid request or failed validation
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    examples:
+                        invalidBody:
+                            summary: Malformed JSON or wrong field types
+                            value:
+                                code: common:request-body-parsing-error
+                                message: invalid request body format
+                        titleTooShort:
+                            summary: Validation forwarded from the task service
+                            value:
+                                code: task:validation:title-too-short
+                                message: task title is too short
+
+        NotFound:
+            description: The task does not exist
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    example:
+                        code: task:shared:not-found
+                        message: task not found
+
+        BadGateway:
+            description: The task service returned a response the gateway could not read
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    example:
+                        code: gateway:task-service-invalid-response
+                        message: the task service returned an unexpected response
+
+        ServiceUnavailable:
+            description: The task service is unreachable
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    example:
+                        code: gateway:task-service-unavailable
+                        message: the task service is unavailable
+
+        GatewayTimeout:
+            description: The task service did not respond within the configured timeout
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+                    example:
+                        code: gateway:task-service-timeout
+                        message: the task service did not respond in time
