@@ -1,4 +1,4 @@
 allowBuilds:
-  '@scarf/scarf': false
-  docsify: set this to true or false
-  esbuild: true
+    '@scarf/scarf': false
+    docsify: set this to true or false
+    esbuild: true
