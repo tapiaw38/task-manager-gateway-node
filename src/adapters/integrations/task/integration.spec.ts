@@ -8,7 +8,11 @@ import { errors } from '../../../platform/errors/mappings';
 import type { Configuration } from '../../../platform/config/config';
 
 const configuration = {
-    taskService: { baseUrl: 'http://task-service', timeoutMs: 50 },
+    taskService: {
+        baseUrl: 'http://task-service',
+        timeoutMs: 50,
+        authenticationEnabled: false,
+    },
 } as Configuration;
 
 const integration = () => createTaskIntegration(configuration);
@@ -53,6 +57,35 @@ describe('task integration', () => {
                 body: JSON.stringify(taskPayload()),
             }),
         );
+    });
+
+    it('adds an identity token when task service authentication is enabled', async () => {
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValueOnce(new Response('token'))
+            .mockResolvedValueOnce(
+                jsonResponse({ data: [buildTask()], total: 1 }),
+            );
+        vi.stubGlobal('fetch', fetchMock);
+
+        await expect(
+            createTaskIntegration({
+                ...configuration,
+                taskService: {
+                    ...configuration.taskService,
+                    authenticationEnabled: true,
+                },
+            }).list(),
+        ).resolves.toEqual({ data: [buildTask()], total: 1 });
+
+        expect(fetchMock.mock.calls[1]).toEqual([
+            'http://task-service/api/tasks',
+            expect.objectContaining({
+                headers: expect.objectContaining({
+                    Authorization: 'Bearer token',
+                }),
+            }),
+        ]);
     });
 
     it('completes a task with a PATCH body', async () => {

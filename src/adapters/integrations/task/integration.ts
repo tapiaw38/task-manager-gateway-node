@@ -2,6 +2,7 @@ import { completeTask } from './complete';
 import { createTask } from './create';
 import { deleteTask } from './delete';
 import { listTasks } from './list';
+import { getIdentityToken, type IdentityTokenProvider } from './identityToken';
 import { ApplicationError } from '../../../platform/errors/applicationError';
 import { errors } from '../../../platform/errors/mappings';
 import type { Configuration } from '../../../platform/config/config';
@@ -26,6 +27,7 @@ export interface ITaskIntegration {
 export interface IntegrationDependencies {
     baseUrl: string;
     timeoutMs: number;
+    identityTokenProvider?: IdentityTokenProvider;
 }
 
 interface ServiceErrorBody {
@@ -34,16 +36,25 @@ interface ServiceErrorBody {
 }
 
 export const requestTaskService = async <T>(
-    { baseUrl, timeoutMs }: IntegrationDependencies,
+    { baseUrl, timeoutMs, identityTokenProvider }: IntegrationDependencies,
     path: string,
     init?: RequestInit,
 ): Promise<T> => {
     let response: Response;
 
     try {
+        const identityToken = identityTokenProvider
+            ? await identityTokenProvider(baseUrl)
+            : undefined;
         response = await fetch(`${baseUrl}${path}`, {
             ...init,
-            headers: { 'Content-Type': 'application/json', ...init?.headers },
+            headers: {
+                'Content-Type': 'application/json',
+                ...(identityToken
+                    ? { Authorization: `Bearer ${identityToken}` }
+                    : {}),
+                ...init?.headers,
+            },
             signal: AbortSignal.timeout(timeoutMs),
         });
     } catch (error) {
@@ -98,6 +109,9 @@ export const createTaskIntegration = (
     const dependencies: IntegrationDependencies = {
         baseUrl: config.taskService.baseUrl,
         timeoutMs: config.taskService.timeoutMs,
+        identityTokenProvider: config.taskService.authenticationEnabled
+            ? getIdentityToken
+            : undefined,
     };
 
     return {

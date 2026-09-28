@@ -8,6 +8,9 @@ const packageRoot = path.resolve(__dirname, '..');
 const getEnv = (name: string, fallback: string): string =>
     process.env[name]?.trim() || fallback;
 
+const getBooleanEnv = (name: string, fallback: boolean): boolean =>
+    getEnv(name, String(fallback)).toLowerCase() === 'true';
+
 const getAllowedOrigins = (): string[] =>
     getEnv('ALLOWED_ORIGINS', 'http://localhost:5173')
         .split(',')
@@ -26,6 +29,10 @@ export const readConfig = (): Configuration => ({
         timeoutMs: Number.parseInt(
             getEnv('TASK_SERVICE_TIMEOUT_MS', '5000'),
             10,
+        ),
+        authenticationEnabled: getBooleanEnv(
+            'TASK_SERVICE_AUTHENTICATION_ENABLED',
+            false,
         ),
     },
     docs: {

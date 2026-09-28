@@ -8,6 +8,7 @@ export interface Configuration {
     taskService: {
         baseUrl: string;
         timeoutMs: number;
+        authenticationEnabled: boolean;
     };
     docs: {
         specPath: string;

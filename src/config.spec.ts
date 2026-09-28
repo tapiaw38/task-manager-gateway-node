@@ -12,6 +12,7 @@ const environmentKeys = [
     'ALLOWED_ORIGINS',
     'TASK_SERVICE_URL',
     'TASK_SERVICE_TIMEOUT_MS',
+    'TASK_SERVICE_AUTHENTICATION_ENABLED',
     'OPENAPI_SPEC_PATH',
 ] as const;
 const originalEnvironment = new Map(
@@ -53,6 +54,7 @@ describe('readConfig', () => {
             taskService: {
                 baseUrl: 'http://localhost:8080',
                 timeoutMs: 5000,
+                authenticationEnabled: false,
             },
         });
         expect(path.isAbsolute(config.docs.specPath)).toBe(true);
@@ -69,6 +71,7 @@ describe('readConfig', () => {
             ' https://one.example, https://two.example ';
         process.env.TASK_SERVICE_URL = 'https://tasks.example';
         process.env.TASK_SERVICE_TIMEOUT_MS = '1200';
+        process.env.TASK_SERVICE_AUTHENTICATION_ENABLED = 'true';
         process.env.OPENAPI_SPEC_PATH = '/tmp/openapi.yaml';
 
         expect(readConfig()).toMatchObject({
@@ -81,6 +84,7 @@ describe('readConfig', () => {
             taskService: {
                 baseUrl: 'https://tasks.example',
                 timeoutMs: 1200,
+                authenticationEnabled: true,
             },
             docs: { specPath: '/tmp/openapi.yaml' },
         });

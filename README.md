@@ -56,15 +56,16 @@ make format-check
 Variables are read from the environment and, when present, from a `.env` file.
 See `.env.example`.
 
-| Variable                  | Default                   | Description                                |
-| :------------------------ | :------------------------ | :----------------------------------------- |
-| `APP_NAME`                | `Task Manager Gateway`    | Name returned by `GET /api/info`           |
-| `APP_VERSION`             | `1.0.0`                   | Version returned by `GET /api/info`        |
-| `PORT`                    | `8081`                    | HTTP port                                  |
-| `ALLOWED_ORIGINS`         | `http://localhost:5173`   | Comma separated CORS origins               |
-| `TASK_SERVICE_URL`        | `http://localhost:8080`   | Base URL of the Go task service            |
-| `TASK_SERVICE_TIMEOUT_MS` | `5000`                    | Timeout for every call to the task service |
-| `OPENAPI_SPEC_PATH`       | `docs/specs/openapi.yaml` | Specification served at `/api/docs`        |
+| Variable                              | Default                   | Description                                |
+| :------------------------------------ | :------------------------ | :----------------------------------------- |
+| `APP_NAME`                            | `Task Manager Gateway`    | Name returned by `GET /api/info`           |
+| `APP_VERSION`                         | `1.0.0`                   | Version returned by `GET /api/info`        |
+| `PORT`                                | `8081`                    | HTTP port                                  |
+| `ALLOWED_ORIGINS`                     | `http://localhost:5173`   | Comma separated CORS origins               |
+| `TASK_SERVICE_URL`                    | `http://localhost:8080`   | Base URL of the Go task service            |
+| `TASK_SERVICE_TIMEOUT_MS`             | `5000`                    | Timeout for every call to the task service |
+| `TASK_SERVICE_AUTHENTICATION_ENABLED` | `false`                   | Enables Cloud Run identity-token requests  |
+| `OPENAPI_SPEC_PATH`                   | `docs/specs/openapi.yaml` | Specification served at `/api/docs`        |
 
 ## Endpoints
 
@@ -188,12 +189,17 @@ Configure these runtime variables in Cloud Run:
 NODE_ENV=production
 TASK_SERVICE_URL=https://GO_SERVICE_URL
 TASK_SERVICE_TIMEOUT_MS=5000
+TASK_SERVICE_AUTHENTICATION_ENABLED=true
 ALLOWED_ORIGINS=https://FIREBASE_HOSTING_URL
 ```
 
 Cloud Run provides `PORT`; do not configure it manually. `TASK_SERVICE_URL`
 must be the deployed Go service URL and `ALLOWED_ORIGINS` must be the Firebase
 Hosting origin, without a trailing slash.
+
+When `TASK_SERVICE_AUTHENTICATION_ENABLED=true`, the Gateway obtains an identity
+token from the Cloud Run metadata server and sends it to the Go service. The
+Gateway runtime identity must have `roles/run.invoker` on that service.
 
 After a successful deployment, verify liveness without calling the Go service:
 
