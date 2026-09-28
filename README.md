@@ -72,6 +72,7 @@ Base URL: `http://localhost:8081`
 
 | Method   | Route                      | Description                         |
 | :------- | :------------------------- | :---------------------------------- |
+| `GET`    | `/health`                  | Liveness; does not call Go          |
 | `GET`    | `/api/info`                | Application name and version        |
 | `GET`    | `/api/tasks`               | List every task, newest first       |
 | `POST`   | `/api/tasks`               | Create a task                       |
@@ -80,8 +81,8 @@ Base URL: `http://localhost:8081`
 | `GET`    | `/api/docs`                | Swagger UI                          |
 | `GET`    | `/api/docs/openapi.yaml`   | OpenAPI 3.0 specification           |
 
-`GET /api/info` answers without reaching the task service, so it stays available
-while the service is down and works as a liveness check.
+`GET /health` answers without reaching the task service and is the Cloud Run
+liveness endpoint. `GET /api/info` returns application metadata.
 
 <details>
 <summary>Request examples</summary>
@@ -149,7 +150,7 @@ src/
     web/
       routes/
       middlewares/logging.ts method, path, status and duration
-      controllers/{task,info,docs}
+      controllers/{task,health,info,docs}
 
   usecases/task/             list, create, complete, delete
 ```
@@ -174,9 +175,37 @@ service errors and the three gateway failure modes. Use cases are tested against
 a double of the integration. Controllers are tested with supertest against a
 minimal Express app.
 
-## Cloud Run deployment
+## Deployment
 
-Deployment is intentionally not part of the current workflow. Future Cloud Run services use `southamerica-east1`. The gateway is the public service; the Go task service remains private. Configure `TASK_SERVICE_URL` with the private task service URL and `ALLOWED_ORIGINS` with the Firebase Hosting origin before deployment.
+The challenge gateway was deployed manually through the Google Cloud Console.
+Cloud Build builds the root `Dockerfile` from the `main` branch and deploys the
+resulting image to the `task-manager-gateway-node` Cloud Run service in
+`southamerica-east1`.
+
+Configure these runtime variables in Cloud Run:
+
+```text
+NODE_ENV=production
+TASK_SERVICE_URL=https://GO_SERVICE_URL
+TASK_SERVICE_TIMEOUT_MS=5000
+ALLOWED_ORIGINS=https://FIREBASE_HOSTING_URL
+```
+
+Cloud Run provides `PORT`; do not configure it manually. `TASK_SERVICE_URL`
+must be the deployed Go service URL and `ALLOWED_ORIGINS` must be the Firebase
+Hosting origin, without a trailing slash.
+
+After a successful deployment, verify liveness without calling the Go service:
+
+```bash
+curl https://SERVICE_URL/health
+```
+
+Expected response:
+
+```json
+{ "status": "ok" }
+```
 
 ## Documentation
 

@@ -17,6 +17,14 @@
     ],
     "item": [
         {
+            "name": "Get service health",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/health"
+            }
+        },
+        {
             "name": "Get application info",
             "request": {
                 "method": "GET",

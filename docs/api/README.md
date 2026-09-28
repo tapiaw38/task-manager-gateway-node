@@ -4,6 +4,7 @@ Base URL: `http://localhost:8081`.
 
 | Method   | Endpoint                   | Description                   |
 | :------- | :------------------------- | :---------------------------- |
+| `GET`    | `/health`                  | Gateway liveness.             |
 | `GET`    | `/api/info`                | Gateway application metadata. |
 | `GET`    | `/api/tasks`               | List tasks, newest first.     |
 | `POST`   | `/api/tasks`               | Create a task.                |

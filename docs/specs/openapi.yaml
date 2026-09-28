@@ -19,12 +19,30 @@ servers:
 security: []
 
 tags:
+    - name: health
+      description: Service liveness
     - name: info
       description: Application metadata
     - name: tasks
       description: Task management
 
 paths:
+    /health:
+        get:
+            tags: [health]
+            summary: Service liveness
+            description: Answers without reaching the Go task service.
+            operationId: getHealth
+            responses:
+                '200':
+                    description: Service is running
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Health'
+                            example:
+                                status: ok
+
     /api/info:
         get:
             tags: [info]
@@ -158,6 +176,14 @@ paths:
 
 components:
     schemas:
+        Health:
+            type: object
+            required: [status]
+            properties:
+                status:
+                    type: string
+                    example: ok
+
         Info:
             type: object
             required: [application, version]

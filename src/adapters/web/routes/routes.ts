@@ -6,6 +6,7 @@ import {
     createDocsUiController,
     docsUiAssets,
 } from '../controllers/docs/get';
+import { createHealthController } from '../controllers/health/get';
 import { createInfoController } from '../controllers/info/get';
 import type { Configuration } from '../../../platform/config/config';
 import type { UseCases } from '../../../usecases/usecases';
@@ -15,6 +16,7 @@ export const registerRoutes = (
     useCases: UseCases,
     config: Configuration,
 ): void => {
+    app.get('/health', createHealthController());
     app.get('/api/info', createInfoController(config));
     app.get('/api/docs/openapi.yaml', createDocsSpecController(config));
     app.use('/api/docs', docsUiAssets, createDocsUiController());
