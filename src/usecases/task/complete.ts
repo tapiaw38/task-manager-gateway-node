@@ -1,4 +1,5 @@
 import { toTaskOutputData, type TaskOutput } from './output-types';
+import { toTask } from './task-mapper';
 import type { CompletePayload } from '../../domain/task';
 import type { AppContextFactory } from '../../platform/appcontext/appcontext';
 
@@ -13,6 +14,6 @@ export const createCompleteUseCase = (
         const app = contextFactory();
         const response = await app.integrations.task.complete(id, payload);
 
-        return { data: toTaskOutputData(response.data) };
+        return { data: toTaskOutputData(toTask(response.data)) };
     },
 });

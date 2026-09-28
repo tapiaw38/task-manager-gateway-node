@@ -5,8 +5,8 @@ export interface TaskOutputData {
     title: string;
     description: string;
     completed: boolean;
-    createdAt: string;
-    updatedAt: string;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface TaskOutput {
@@ -23,6 +23,6 @@ export const toTaskOutputData = (task: Task): TaskOutputData => ({
     title: task.title,
     description: task.description,
     completed: task.completed,
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt,
+    created_at: task.createdAt,
+    updated_at: task.updatedAt,
 });

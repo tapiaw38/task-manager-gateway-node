@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTaskIntegration } from './integration';
-import { buildTask, taskPayload } from '../../../test/fixtures/task';
+import { buildTaskServiceData, taskPayload } from '../../../test/fixtures/task';
 import { emptyResponse, jsonResponse } from '../../../test/mocks/fetch';
 import { ApplicationError } from '../../../platform/errors/applicationError';
 import { errors } from '../../../platform/errors/mappings';
@@ -26,7 +26,7 @@ describe('task integration', () => {
     });
 
     it('lists tasks from the task service', async () => {
-        const task = buildTask();
+        const task = buildTaskServiceData();
         const fetchMock = vi
             .fn()
             .mockResolvedValue(jsonResponse({ data: [task], total: 1 }));
@@ -45,7 +45,9 @@ describe('task integration', () => {
     it('creates a task with a POST body', async () => {
         const fetchMock = vi
             .fn()
-            .mockResolvedValue(jsonResponse({ data: buildTask() }, 201));
+            .mockResolvedValue(
+                jsonResponse({ data: buildTaskServiceData() }, 201),
+            );
         vi.stubGlobal('fetch', fetchMock);
 
         await integration().create(taskPayload());
@@ -64,7 +66,7 @@ describe('task integration', () => {
             .fn()
             .mockResolvedValueOnce(new Response('token'))
             .mockResolvedValueOnce(
-                jsonResponse({ data: [buildTask()], total: 1 }),
+                jsonResponse({ data: [buildTaskServiceData()], total: 1 }),
             );
         vi.stubGlobal('fetch', fetchMock);
 
@@ -76,7 +78,7 @@ describe('task integration', () => {
                     authenticationEnabled: true,
                 },
             }).list(),
-        ).resolves.toEqual({ data: [buildTask()], total: 1 });
+        ).resolves.toEqual({ data: [buildTaskServiceData()], total: 1 });
 
         expect(fetchMock.mock.calls[1]).toEqual([
             'http://task-service/api/tasks',
@@ -91,7 +93,7 @@ describe('task integration', () => {
     it('completes a task with a PATCH body', async () => {
         const fetchMock = vi
             .fn()
-            .mockResolvedValue(jsonResponse({ data: buildTask() }));
+            .mockResolvedValue(jsonResponse({ data: buildTaskServiceData() }));
         vi.stubGlobal('fetch', fetchMock);
 
         await integration().complete('task 1', { completed: true });

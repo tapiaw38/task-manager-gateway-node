@@ -4,17 +4,19 @@ import { createCompleteUseCase } from './complete';
 import { createCreateUseCase } from './create';
 import { createDeleteUseCase } from './delete';
 import { createListUseCase } from './list';
-import { buildTask, taskPayload } from '../../test/fixtures/task';
+import { buildTaskServiceData, taskPayload } from '../../test/fixtures/task';
 import type { ITaskIntegration } from '../../adapters/integrations/task/integration';
 
 const newIntegration = (
     overrides: Partial<ITaskIntegration> = {},
 ): ITaskIntegration => ({
-    list: vi.fn().mockResolvedValue({ data: [buildTask()], total: 1 }),
-    create: vi.fn().mockResolvedValue({ data: buildTask() }),
+    list: vi
+        .fn()
+        .mockResolvedValue({ data: [buildTaskServiceData()], total: 1 }),
+    create: vi.fn().mockResolvedValue({ data: buildTaskServiceData() }),
     complete: vi
         .fn()
-        .mockResolvedValue({ data: buildTask({ completed: true }) }),
+        .mockResolvedValue({ data: buildTaskServiceData({ completed: true }) }),
     remove: vi.fn().mockResolvedValue(undefined),
     ...overrides,
 });
@@ -25,18 +27,18 @@ const contextFactory = (integration: ITaskIntegration) => () => ({
 
 const outputKeys = [
     'completed',
-    'createdAt',
+    'created_at',
     'description',
     'id',
     'title',
-    'updatedAt',
+    'updated_at',
 ];
 
 describe('createListUseCase', () => {
     it('maps every task to the output contract', async () => {
         const integration = newIntegration({
             list: vi.fn().mockResolvedValue({
-                data: [{ ...buildTask(), internal: 'hidden' }],
+                data: [{ ...buildTaskServiceData(), internal: 'hidden' }],
                 total: 1,
             }),
         });

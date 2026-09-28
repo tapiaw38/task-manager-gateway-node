@@ -197,7 +197,8 @@ components:
 
         Task:
             type: object
-            required: [id, title, description, completed, createdAt, updatedAt]
+            required:
+                [id, title, description, completed, created_at, updated_at]
             properties:
                 id:
                     type: string
@@ -211,11 +212,11 @@ components:
                 completed:
                     type: boolean
                     example: false
-                createdAt:
+                created_at:
                     type: string
                     format: date-time
                     example: '2026-09-27T10:05:00Z'
-                updatedAt:
+                updated_at:
                     type: string
                     format: date-time
                     example: '2026-09-27T10:05:00Z'

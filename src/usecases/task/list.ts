@@ -1,5 +1,6 @@
 import type { TaskListOutput } from './output-types';
 import { toTaskOutputData } from './output-types';
+import { toTask } from './task-mapper';
 import type { AppContextFactory } from '../../platform/appcontext/appcontext';
 
 export interface ListUseCase {
@@ -14,7 +15,7 @@ export const createListUseCase = (
         const response = await app.integrations.task.list();
 
         return {
-            data: response.data.map(toTaskOutputData),
+            data: response.data.map(toTask).map(toTaskOutputData),
             total: response.total,
         };
     },

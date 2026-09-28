@@ -7,7 +7,10 @@ import { createCompleteController } from './complete';
 import { createCreateController } from './create';
 import { createDeleteController } from './delete';
 import { createListController } from './list';
-import { buildTask, taskPayload } from '../../../../test/fixtures/task';
+import {
+    buildTaskOutputData,
+    taskPayload,
+} from '../../../../test/fixtures/task';
 import { ApplicationError } from '../../../../platform/errors/applicationError';
 import { errors } from '../../../../platform/errors/mappings';
 import { errorHandler } from '../../../../platform/web/errorHandler';
@@ -33,7 +36,7 @@ describe('task controllers', () => {
         const useCase = {
             execute: vi
                 .fn()
-                .mockResolvedValue({ data: [buildTask()], total: 1 }),
+                .mockResolvedValue({ data: [buildTaskOutputData()], total: 1 }),
         };
 
         await request(
@@ -41,12 +44,12 @@ describe('task controllers', () => {
         )
             .get('/api/tasks')
             .expect(StatusCodes.OK)
-            .expect({ data: [buildTask()], total: 1 });
+            .expect({ data: [buildTaskOutputData()], total: 1 });
     });
 
     it('creates a task and answers with created', async () => {
         const useCase = {
-            execute: vi.fn().mockResolvedValue({ data: buildTask() }),
+            execute: vi.fn().mockResolvedValue({ data: buildTaskOutputData() }),
         };
 
         await request(
@@ -80,9 +83,9 @@ describe('task controllers', () => {
 
     it('completes a task with the parsed flag', async () => {
         const useCase = {
-            execute: vi
-                .fn()
-                .mockResolvedValue({ data: buildTask({ completed: true }) }),
+            execute: vi.fn().mockResolvedValue({
+                data: buildTaskOutputData({ completed: true }),
+            }),
         };
 
         await request(

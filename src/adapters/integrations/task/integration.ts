@@ -6,15 +6,24 @@ import { getIdentityToken, type IdentityTokenProvider } from './identityToken';
 import { ApplicationError } from '../../../platform/errors/applicationError';
 import { errors } from '../../../platform/errors/mappings';
 import type { Configuration } from '../../../platform/config/config';
-import type { CompletePayload, Task, TaskPayload } from '../../../domain/task';
+import type { CompletePayload, TaskPayload } from '../../../domain/task';
+
+export interface TaskServiceData {
+    id: string;
+    title: string;
+    description: string;
+    completed: boolean;
+    created_at: string;
+    updated_at: string;
+}
 
 export interface TaskListResponse {
-    data: Task[];
+    data: TaskServiceData[];
     total: number;
 }
 
 export interface TaskResponse {
-    data: Task;
+    data: TaskServiceData;
 }
 
 export interface ITaskIntegration {
